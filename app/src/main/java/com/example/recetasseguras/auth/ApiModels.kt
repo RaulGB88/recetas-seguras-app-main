@@ -34,3 +34,21 @@ data class ApiError(
     val message: String?,
     val errors: List<ValidationError>?
 )
+
+@JsonClass(generateAdapter = true)
+data class ConditionDto(val id: Int, val name: String, val conditionType: String)
+
+@JsonClass(generateAdapter = true)
+data class UserConditionRequest(val conditionIds: List<Int>)
+
+@JsonClass(generateAdapter = true)
+data class FoodDto(val id: Int, val name: String, val category: String)
+
+@JsonClass(generateAdapter = true)
+data class RecipeDto(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val steps: String,
+    val ingredients: List<Int>
+)

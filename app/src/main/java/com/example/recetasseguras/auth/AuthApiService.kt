@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface AuthApiService {
     @POST("/api/auth/register")
@@ -20,4 +21,16 @@ interface AuthApiService {
 
     @GET("/api/auth/me")
     suspend fun me(): Response<UserDto>
+
+    @GET("/api/conditions")
+    suspend fun getConditions(): List<ConditionDto>
+
+    @POST("/api/users/{id}/conditions")
+    suspend fun setUserConditions(@Path("id") userId: Long, @Body body: UserConditionRequest): retrofit2.Response<Unit>
+
+    @GET("/api/users/{id}/safe-foods")
+    suspend fun getSafeFoods(@Path("id") userId: Long): List<FoodDto>
+
+    @GET("/api/users/{id}/safe-recipes")
+    suspend fun getSafeRecipes(@Path("id") userId: Long): List<RecipeDto>
 }

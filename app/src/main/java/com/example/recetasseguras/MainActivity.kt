@@ -18,6 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.setValue
 import com.example.recetasseguras.ui.auth.LoginScreen
 import com.example.recetasseguras.ui.auth.RegisterScreen
@@ -39,93 +42,159 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RecetasSegurasTheme {
-                RecetasSegurasApp()
+                    RecetasSegurasApp()
             }
         }
     }
 }
 
-@PreviewScreenSizes
-@Composable
-fun RecetasSegurasApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-    var showingRegister by rememberSaveable { mutableStateOf(false) }
-    val authManager = LocalContext.current.let { com.example.recetasseguras.auth.AuthManager.getInstance(it) }
+    @PreviewScreenSizes
+    @Composable
+    fun RecetasSegurasApp() {
+        var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+        var showingRegister by rememberSaveable { mutableStateOf(false) }
+        val context = LocalContext.current
+        val authManager = com.example.recetasseguras.auth.AuthManager.getInstance(context)
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+        val showMessage: (String) -> Unit = { msg ->
+            scope.launch { snackbarHostState.showSnackbar(msg) }
+        }
+        val viewModel = remember { com.example.recetasseguras.auth.AuthViewModel(context) }
+        val allConditions by viewModel.allConditions.collectAsState()
+        val selectedConditions by viewModel.selectedConditions.collectAsState()
+        val conditionsLoading by viewModel.conditionsLoading.collectAsState()
+        val conditionsError by viewModel.conditionsError.collectAsState()
+        val safeFoods by viewModel.safeFoods.collectAsState()
+        val safeRecipes by viewModel.safeRecipes.collectAsState()
+        var userId by rememberSaveable { mutableStateOf<Long?>(null) }
+        var username by rememberSaveable { mutableStateOf("") }
+        var needsConditionSelection by rememberSaveable { mutableStateOf(false) }
 
-    val snackbarHostState = SnackbarHostState()
-    val scope = rememberCoroutineScope()
-    val showMessage: (String) -> Unit = { msg ->
-        scope.launch { snackbarHostState.showSnackbar(msg) }
-    }
-
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
+        fun fetchUserAndContinue() {
+            scope.launch {
+                val user = viewModel.fetchUser()
+                userId = user?.id
+                username = user?.username ?: ""
+                viewModel.loadAllConditions()
+                needsConditionSelection = selectedConditions.isEmpty()
+                if (needsConditionSelection) {
+                    currentDestination = AppDestinations.CONDITION_SELECTION
+                } else {
+                    if (userId != null) {
+                        viewModel.loadSafeFoods(userId!!)
+                        viewModel.loadSafeRecipes(userId!!)
+                    }
+                    currentDestination = AppDestinations.HOME
+                }
             }
         }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { innerPadding ->
-            when (currentDestination) {
-                AppDestinations.HOME, AppDestinations.FAVORITES -> Greeting(
-                    name = "Android",
-                    modifier = Modifier.padding(innerPadding)
+
+        if (authManager.getAccessToken() == null || userId == null) {
+            // Solo mostrar login/registro, bloquear navegación
+            if (showingRegister) {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        fetchUserAndContinue()
+                        showingRegister = false
+                    },
+                    onGoToLogin = { showingRegister = false },
+                    onMessage = showMessage
                 )
-                AppDestinations.PROFILE -> {
-                    if (authManager.getAccessToken() != null) {
-                        Greeting(name = "Profile (autenticado)", modifier = Modifier.padding(innerPadding))
-                    } else {
-                        if (showingRegister) {
-                            RegisterScreen(
-                                onRegisterSuccess = { showingRegister = false },
-                                onGoToLogin = { showingRegister = false },
-                                onMessage = showMessage
-                            )
-                        } else {
-                            LoginScreen(
-                                onLoginSuccess = { /* refresh UI or navigate */ },
-                                onGoToRegister = { showingRegister = true },
-                                onMessage = showMessage
-                            )
+            } else {
+                LoginScreen(
+                    onLoginSuccess = {
+                        fetchUserAndContinue()
+                    },
+                    onGoToRegister = { showingRegister = true },
+                    onMessage = showMessage
+                )
+            }
+        } else {
+            // Navegación disponible solo si autenticado
+            NavigationSuiteScaffold(
+                navigationSuiteItems = {
+                    AppDestinations.entries.forEach {
+                        item(
+                            icon = {
+                                Icon(
+                                    it.icon,
+                                    contentDescription = it.label
+                                )
+                            },
+                            label = { Text(it.label) },
+                            selected = it == currentDestination,
+                            onClick = { currentDestination = it }
+                        )
+                    }
+                }
+            ) {
+                Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { innerPadding ->
+                    when (currentDestination) {
+                            AppDestinations.HOME -> {
+                                com.example.recetasseguras.ui.HomeScreen(
+                                    foods = safeFoods,
+                                    recipes = safeRecipes,
+                                    loading = false,
+                                    error = null,
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            AppDestinations.CONDITION_SELECTION -> {
+                                com.example.recetasseguras.ui.ConditionSelectionScreen(
+                                    allConditions = allConditions,
+                                    selectedConditions = selectedConditions,
+                                    onAddCondition = { viewModel.addCondition(it) },
+                                    onRemoveCondition = { viewModel.removeCondition(it) },
+                                    onSave = {
+                                        if (userId != null) {
+                                            viewModel.saveUserConditions(
+                                                userId!!,
+                                                onSuccess = {
+                                                    needsConditionSelection = false
+                                                    viewModel.loadSafeFoods(userId!!)
+                                                    viewModel.loadSafeRecipes(userId!!)
+                                                    currentDestination = AppDestinations.HOME
+                                                },
+                                                onError = { showMessage(it) }
+                                            )
+                                        }
+                                    },
+                                    loading = conditionsLoading,
+                                    error = conditionsError,
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                        AppDestinations.PROFILE -> {
+                            Greeting(name = "Perfil: $username", modifier = Modifier.padding(innerPadding))
                         }
                     }
                 }
             }
         }
     }
-}
 
-enum class AppDestinations(
-    val label: String,
-    val icon: ImageVector,
-) {
-    HOME("Home", Icons.Default.Home),
-    FAVORITES("Favorites", Icons.Default.Favorite),
-    PROFILE("Profile", Icons.Default.AccountBox),
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    RecetasSegurasTheme {
-        Greeting("Android")
+    enum class AppDestinations(
+        val label: String,
+        val icon: ImageVector,
+    ) {
+        HOME("Inicio", Icons.Default.Home),
+        CONDITION_SELECTION("Condiciones", Icons.Default.Favorite),
+        PROFILE("Perfil", Icons.Default.AccountBox),
     }
-}
+
+    @Composable
+    fun Greeting(name: String, modifier: Modifier = Modifier) {
+        Text(
+            text = "¡Hola, $name!",
+            modifier = modifier
+        )
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun GreetingPreview() {
+        RecetasSegurasTheme {
+            Greeting("Android")
+        }
+    }
