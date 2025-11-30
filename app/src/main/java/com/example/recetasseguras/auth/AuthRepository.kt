@@ -6,6 +6,21 @@ import com.example.recetasseguras.network.NetworkModule
 import retrofit2.Response
 
 class AuthRepository(private val api: AuthApiService, private val authManager: AuthManager) {
+        suspend fun getConditions(): List<ConditionDto> {
+            return api.getConditions()
+        }
+
+        suspend fun setUserConditions(userId: Long, body: UserConditionRequest): retrofit2.Response<Unit> {
+            return api.setUserConditions(userId, body)
+        }
+
+        suspend fun getSafeFoods(userId: Long): List<FoodDto> {
+            return api.getSafeFoods(userId)
+        }
+
+        suspend fun getSafeRecipes(userId: Long): List<RecipeDto> {
+            return api.getSafeRecipes(userId)
+        }
     companion object {
         fun create(context: Context): AuthRepository {
             val api = NetworkModule.provideAuthApi(context)
