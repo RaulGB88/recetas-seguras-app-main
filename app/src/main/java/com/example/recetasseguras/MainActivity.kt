@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
         val label: String,
         val icon: ImageVector,
     ) {
-        HOME("Inicio", Icons.Default.Home),
+        HOME("Sugerencias", Icons.Default.Home),
         CONDITION_SELECTION("Condiciones", Icons.Default.Favorite),
         PROFILE("Perfil", Icons.Default.AccountBox),
     }
