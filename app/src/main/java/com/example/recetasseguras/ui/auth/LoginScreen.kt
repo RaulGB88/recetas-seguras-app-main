@@ -66,7 +66,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
@@ -77,7 +77,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Contraseña") },
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -92,8 +92,14 @@ fun LoginScreen(
         )
         fieldErrors["password"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
-        if (error != null) {
-            Text(text = error ?: "", modifier = Modifier.padding(top = 8.dp))
+        val errorValue = error
+        if (errorValue != null) {
+            val friendlyError = if (errorValue.contains("connect", true) || errorValue.contains("failed", true) || errorValue.contains("timeout", true)) {
+                "No se pudo conectar con el servidor"
+            } else {
+                "Ocurrió un error, intenta más tarde"
+            }
+            Text(text = friendlyError, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -101,7 +107,7 @@ fun LoginScreen(
         Button(
             onClick = {
                 vm.login(email, password) {
-                    onMessage("Login successful")
+                    onMessage("Inicio de sesión exitoso")
                     onLoginSuccess()
                 }
             },
@@ -111,14 +117,14 @@ fun LoginScreen(
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp))
             } else {
-                Text("Login")
+                Text("Iniciar sesión")
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = onGoToRegister, enabled = !loading, modifier = Modifier.fillMaxWidth(0.9f)) {
-            Text("Register")
+            Text("Registrarse")
         }
     }
 }

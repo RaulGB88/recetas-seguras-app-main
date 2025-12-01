@@ -59,17 +59,18 @@ class AuthViewModel(context: Context) : ViewModel() {
                     val body = resp.errorBody()?.string()
                     val apiErr = ApiErrorParser.parse(body)
                     if (apiErr != null) {
-                        _error.value = apiErr.message ?: apiErr.error ?: "Login failed"
+                        _error.value = apiErr.message?.takeIf { it.isNotBlank() }
+                            ?: "No se pudo conectar con el servidor"
                         val map = apiErr.errors
                             ?.mapNotNull { e -> e.field?.let { f -> f to (e.message ?: "") } }
                             ?.toMap() ?: emptyMap()
                         _fieldErrors.value = map
                     } else {
-                        _error.value = body ?: "Login failed"
+                        _error.value = "No se pudo conectar con el servidor"
                     }
                 }
             } catch (t: Throwable) {
-                _error.value = t.localizedMessage ?: "Network error"
+                _error.value = "No se pudo conectar con el servidor"
             } finally {
                 _loading.value = false
             }
@@ -89,17 +90,18 @@ class AuthViewModel(context: Context) : ViewModel() {
                     val body = resp.errorBody()?.string()
                     val apiErr = ApiErrorParser.parse(body)
                     if (apiErr != null) {
-                        _error.value = apiErr.message ?: apiErr.error ?: "Register failed"
+                        _error.value = apiErr.message?.takeIf { it.isNotBlank() }
+                            ?: "No se pudo conectar con el servidor"
                         val map = apiErr.errors
                             ?.mapNotNull { e -> e.field?.let { f -> f to (e.message ?: "") } }
                             ?.toMap() ?: emptyMap()
                         _fieldErrors.value = map
                     } else {
-                        _error.value = body ?: "Register failed"
+                        _error.value = "No se pudo conectar con el servidor"
                     }
                 }
             } catch (t: Throwable) {
-                _error.value = t.localizedMessage ?: "Network error"
+                _error.value = "No se pudo conectar con el servidor"
             } finally {
                 _loading.value = false
             }
@@ -114,7 +116,7 @@ class AuthViewModel(context: Context) : ViewModel() {
                 val result = repo.getConditions()
                 _allConditions.value = result
             } catch (e: Exception) {
-                _conditionsError.value = e.localizedMessage ?: "Error al cargar condiciones"
+                _conditionsError.value = "No se pudo conectar con el servidor"
             } finally {
                 _conditionsLoading.value = false
             }
@@ -139,10 +141,10 @@ class AuthViewModel(context: Context) : ViewModel() {
                 if (resp.isSuccessful) {
                     onSuccess()
                 } else {
-                    onError("Error al guardar condiciones")
+                    onError("No se pudo guardar las condiciones")
                 }
             } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Error al guardar condiciones")
+                onError("No se pudo guardar las condiciones")
             } finally {
                 _conditionsLoading.value = false
             }

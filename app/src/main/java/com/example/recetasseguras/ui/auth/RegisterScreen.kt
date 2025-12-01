@@ -71,7 +71,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text("Nombre de usuario") },
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
@@ -82,7 +82,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
@@ -93,7 +93,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Contraseña") },
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -108,8 +108,14 @@ fun RegisterScreen(
         )
         (passwordError ?: fieldErrors["password"])?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
-        if (error != null) {
-            Text(text = error ?: "", modifier = Modifier.padding(top = 8.dp))
+        val errorValue = error
+        if (errorValue != null) {
+            val friendlyError = if (errorValue.contains("connect", true) || errorValue.contains("failed", true) || errorValue.contains("timeout", true)) {
+                "No se pudo conectar con el servidor"
+            } else {
+                "Ocurrió un error, intenta más tarde"
+            }
+            Text(text = friendlyError, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -124,25 +130,25 @@ fun RegisterScreen(
                 // basic client-side validation
                 var hasError = false
                 if (username.isBlank()) {
-                    usernameError = "Username is required"
+                    usernameError = "El nombre de usuario es obligatorio"
                     hasError = true
                 }
                 if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    emailError = "Provide a valid email"
+                    emailError = "Proporciona un correo electrónico válido"
                     hasError = true
                 }
                 if (password.length < 8) {
-                    passwordError = "Password must be at least 8 characters"
+                    passwordError = "La contraseña debe tener al menos 8 caracteres"
                     hasError = true
                 }
 
                 if (hasError) {
-                    onMessage("Please fix the highlighted fields")
+                    onMessage("Por favor corrige los campos resaltados")
                     return@Button
                 }
 
                 vm.register(username, email, password) {
-                    onMessage("Register successful")
+                    onMessage("Registro exitoso")
                     onRegisterSuccess()
                 }
             },
@@ -152,14 +158,14 @@ fun RegisterScreen(
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp))
             } else {
-                Text("Register")
+                Text("Registrarse")
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = onGoToLogin, modifier = Modifier.fillMaxWidth(0.9f), enabled = !loading) {
-            Text("Back to Login")
+            Text("Volver al inicio de sesión")
         }
     }
 }
