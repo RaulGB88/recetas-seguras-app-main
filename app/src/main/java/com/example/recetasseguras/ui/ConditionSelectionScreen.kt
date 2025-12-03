@@ -33,7 +33,13 @@ fun ConditionSelectionScreen(
             }
         }
 
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Condiciones", style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(24.dp))
+        
         OutlinedTextField(
             value = search,
             onValueChange = { search = it },

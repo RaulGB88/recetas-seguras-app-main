@@ -25,6 +25,9 @@ interface AuthApiService {
     @GET("/api/conditions")
     suspend fun getConditions(): List<ConditionDto>
 
+    @GET("/api/users/{id}/conditions")
+    suspend fun getUserConditions(@Path("id") userId: Long): List<ConditionDto>
+
     @POST("/api/users/{id}/conditions")
     suspend fun setUserConditions(@Path("id") userId: Long, @Body body: UserConditionRequest): retrofit2.Response<Unit>
 
@@ -33,4 +36,7 @@ interface AuthApiService {
 
     @GET("/api/users/{id}/safe-recipes")
     suspend fun getSafeRecipes(@Path("id") userId: Long): List<RecipeDto>
+
+    @POST("/api/auth/change-password")
+    suspend fun changePassword(@Body req: ChangePasswordRequest): Response<Unit>
 }
