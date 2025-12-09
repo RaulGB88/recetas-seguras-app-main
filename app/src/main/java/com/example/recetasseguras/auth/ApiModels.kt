@@ -9,6 +9,9 @@ data class RegisterRequest(val username: String, val email: String, val password
 data class AuthRequest(val email: String, val password: String)
 
 @JsonClass(generateAdapter = true)
+data class ChangePasswordRequest(val oldPassword: String, val newPassword: String)
+
+@JsonClass(generateAdapter = true)
 data class RefreshRequest(val refreshToken: String)
 
 @JsonClass(generateAdapter = true)
@@ -45,10 +48,17 @@ data class UserConditionRequest(val conditionIds: List<Int>)
 data class FoodDto(val id: Int, val name: String, val category: String)
 
 @JsonClass(generateAdapter = true)
+data class RecipeIngredientDto(
+    val foodId: Int? = null,
+    val foodName: String? = null,
+    val quantity: String? = null
+)
+
+@JsonClass(generateAdapter = true)
 data class RecipeDto(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val steps: String,
-    val ingredients: List<Int>
+    val id: Int? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val steps: String? = null,
+    val ingredients: List<RecipeIngredientDto>? = null
 )

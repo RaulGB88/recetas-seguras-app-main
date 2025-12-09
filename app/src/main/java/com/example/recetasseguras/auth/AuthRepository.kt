@@ -10,6 +10,10 @@ class AuthRepository(private val api: AuthApiService, private val authManager: A
             return api.getConditions()
         }
 
+        suspend fun getUserConditions(userId: Long): List<ConditionDto> {
+            return api.getUserConditions(userId)
+        }
+
         suspend fun setUserConditions(userId: Long, body: UserConditionRequest): retrofit2.Response<Unit> {
             return api.setUserConditions(userId, body)
         }
@@ -62,6 +66,10 @@ class AuthRepository(private val api: AuthApiService, private val authManager: A
             api.logout(RefreshRequest(it))
         }
         authManager.clearTokens()
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): Response<Unit> {
+        return api.changePassword(ChangePasswordRequest(oldPassword, newPassword))
     }
 
     suspend fun me(): Response<UserDto> = api.me()
