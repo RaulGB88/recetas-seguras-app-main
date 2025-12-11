@@ -45,7 +45,7 @@ fun HomeScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // Mostrar loading si los datos aún no se han cargado (son null) o si loading es true
+        // Muestro loading si los datos aún no se han cargado (son null) o si loading es true
         if (foods == null || recipes == null || loading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -95,13 +95,8 @@ fun HomeScreen(
         }
 
         error?.let {
-            val friendlyError = if (it.contains("connect", true) || it.contains("failed", true) || it.contains("timeout", true)) {
-                "No se pudo conectar con el servidor"
-            } else {
-                "Ocurrió un error, intenta más tarde"
-            }
             Spacer(Modifier.height(8.dp))
-            Text(text = friendlyError, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+            Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }

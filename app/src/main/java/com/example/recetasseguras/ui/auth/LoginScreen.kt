@@ -28,7 +28,8 @@ import androidx.lifecycle.ViewModelProvider
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onGoToRegister: () -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val vm: AuthViewModel = viewModel(factory = object : ViewModelProvider.Factory {
@@ -42,20 +43,27 @@ fun LoginScreen(
     val error by vm.error.collectAsState()
     val fieldErrors by vm.fieldErrors.collectAsState()
 
+    // Limpio errores por campo al entrar en la pantalla para evitar que se carreen
+    LaunchedEffect(Unit) {
+        vm.clearFieldErrors()
+    }
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Show snackbar for error messages via the provided callback (copy to local var to avoid smart-cast issues)
+    // Muestro snackbar para mensajes de error usando el callback proporcionado
+    // Solo muestro el snackbar global si no hay errores por campo (evitar duplicados)
     val currentError = error
-    LaunchedEffect(currentError) {
-        if (!currentError.isNullOrBlank()) {
+    val currentFieldErrors = fieldErrors
+    LaunchedEffect(currentError, currentFieldErrors) {
+        if (!currentError.isNullOrBlank() && currentFieldErrors.isEmpty()) {
             onMessage(currentError)
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -70,7 +78,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
-        fieldErrors["email"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
+        fieldErrors["email"]?.let { if (error.isNullOrBlank()) Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -90,16 +98,11 @@ fun LoginScreen(
                 }
             }
         )
-        fieldErrors["password"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
+        fieldErrors["password"]?.let { if (error.isNullOrBlank()) Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
-        val errorValue = error
-        if (errorValue != null) {
-            val friendlyError = if (errorValue.contains("connect", true) || errorValue.contains("failed", true) || errorValue.contains("timeout", true)) {
-                "No se pudo conectar con el servidor"
-            } else {
-                "Ocurrió un error, intenta más tarde"
-            }
-            Text(text = friendlyError, modifier = Modifier.padding(top = 8.dp))
+        error?.let {
+            // Muestro mensaje global preferente (ya traducido por ApiErrorParser)
+            Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))

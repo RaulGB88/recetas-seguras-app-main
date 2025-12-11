@@ -41,7 +41,7 @@ fun RecipeDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Título
+            // Muestro el título
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -59,7 +59,7 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // Descripción
+            // Muestro la descripción
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -83,7 +83,7 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // Ingredientes
+            // Muestro los ingredientes
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -135,7 +135,7 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // Pasos
+            // Muestro los pasos
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

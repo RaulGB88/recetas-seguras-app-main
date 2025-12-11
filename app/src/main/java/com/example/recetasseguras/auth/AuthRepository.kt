@@ -68,8 +68,12 @@ class AuthRepository(private val api: AuthApiService, private val authManager: A
         authManager.clearTokens()
     }
 
-    suspend fun changePassword(oldPassword: String, newPassword: String): Response<Unit> {
-        return api.changePassword(ChangePasswordRequest(oldPassword, newPassword))
+    suspend fun changePassword(oldPassword: String, newPassword: String, confirmPassword: String): Response<Unit> {
+        return api.changePassword(ChangePasswordRequest(oldPassword, newPassword, confirmPassword))
+    }
+
+    suspend fun getStats(): retrofit2.Response<Map<String, Long>> {
+        return api.getStats()
     }
 
     suspend fun me(): Response<UserDto> = api.me()

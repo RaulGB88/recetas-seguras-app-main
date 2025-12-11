@@ -28,7 +28,8 @@ import androidx.lifecycle.ViewModelProvider
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onGoToLogin: () -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val vm: AuthViewModel = viewModel(factory = object : ViewModelProvider.Factory {
@@ -46,21 +47,25 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    // Local client-side field errors to avoid unnecessary network calls
-    var usernameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
+    // Validación gestionada por el backend; no mantenemos errores locales aquí
 
-    // Show snackbar for error messages via provided callback (copy to local var to avoid smart-cast issues)
+    // Limpio errores por campo al entrar en la pantalla
+    LaunchedEffect(Unit) {
+        vm.clearFieldErrors()
+    }
+
+    // Muestro snackbar para mensajes de error usando el callback proporcionado
+    // Solo muestro el snackbar global si no hay errores por campo (evitar duplicados)
     val currentError = error
-    LaunchedEffect(currentError) {
-        if (!currentError.isNullOrBlank()) {
+    val currentFieldErrors = fieldErrors
+    LaunchedEffect(currentError, currentFieldErrors) {
+        if (!currentError.isNullOrBlank() && currentFieldErrors.isEmpty()) {
             onMessage(currentError)
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -75,7 +80,7 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
-        (usernameError ?: fieldErrors["username"])?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
+        fieldErrors["username"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -86,7 +91,7 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(0.9f),
             singleLine = true
         )
-        (emailError ?: fieldErrors["email"])?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
+        fieldErrors["email"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -106,47 +111,17 @@ fun RegisterScreen(
                 }
             }
         )
-        (passwordError ?: fieldErrors["password"])?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
+        fieldErrors["password"]?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth(0.9f).padding(top = 4.dp)) }
 
-        val errorValue = error
-        if (errorValue != null) {
-            val friendlyError = if (errorValue.contains("connect", true) || errorValue.contains("failed", true) || errorValue.contains("timeout", true)) {
-                "No se pudo conectar con el servidor"
-            } else {
-                "Ocurrió un error, intenta más tarde"
-            }
-            Text(text = friendlyError, modifier = Modifier.padding(top = 8.dp))
+        error?.let {
+            Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = {
-                // clear local errors
-                usernameError = null
-                emailError = null
-                passwordError = null
-
-                // basic client-side validation
-                var hasError = false
-                if (username.isBlank()) {
-                    usernameError = "El nombre de usuario es obligatorio"
-                    hasError = true
-                }
-                if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    emailError = "Proporciona un correo electrónico válido"
-                    hasError = true
-                }
-                if (password.length < 8) {
-                    passwordError = "La contraseña debe tener al menos 8 caracteres"
-                    hasError = true
-                }
-
-                if (hasError) {
-                    onMessage("Por favor corrige los campos resaltados")
-                    return@Button
-                }
-
+                // Envío directo al backend; la validación y los mensajes los manejo desde el servidor
                 vm.register(username, email, password) {
                     onMessage("Registro exitoso")
                     onRegisterSuccess()

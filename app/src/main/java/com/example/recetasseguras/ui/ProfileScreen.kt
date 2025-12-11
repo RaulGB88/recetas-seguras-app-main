@@ -53,7 +53,10 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { showChangePasswordDialog = true },
+            onClick = {
+                viewModel.clearFieldErrors()
+                showChangePasswordDialog = true
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = !loading
         ) {
@@ -97,6 +100,7 @@ fun ChangePasswordDialog(
     onMessage: (String) -> Unit
 ) {
     val loading by viewModel.loading.collectAsState()
+    val fieldErrors by viewModel.fieldErrors.collectAsState()
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -127,6 +131,12 @@ fun ChangePasswordDialog(
                     enabled = !loading
                 )
 
+                // Muestro error en línea (provisto por el servidor)
+                fieldErrors["oldPassword"]?.let { err ->
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
@@ -147,6 +157,11 @@ fun ChangePasswordDialog(
                     enabled = !loading
                 )
 
+                fieldErrors["newPassword"]?.let { err ->
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
@@ -166,29 +181,24 @@ fun ChangePasswordDialog(
                     },
                     enabled = !loading
                 )
+
+                fieldErrors["confirmPassword"]?.let { err ->
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (oldPassword.isBlank()) {
-                        onMessage("Ingresa tu contraseña actual")
-                        return@Button
-                    }
-                    if (newPassword.length < 8) {
-                        onMessage("La contraseña debe tener al menos 8 caracteres")
-                        return@Button
-                    }
-                    if (newPassword != confirmPassword) {
-                        onMessage("Las contraseñas no coinciden")
-                        return@Button
-                    }
-
                     viewModel.changePassword(
                         oldPassword = oldPassword,
                         newPassword = newPassword,
+                        confirmPassword = confirmPassword,
                         onSuccess = onSuccess,
-                        onError = { onMessage(it) }
+                        onError = { msg ->
+                            onMessage(msg)
+                        }
                     )
                 },
                 enabled = !loading
