@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit
  * Aquí implementamos el refresh automático de tokens cuando expiran.
  */
 object NetworkModule {
-    // Lock para asegurar que solo un refresh se ejecute a la vez (single-flight)
-    // Single lock used to ensure only one refresh runs at a time (single-flight)
+    // Aseguro con un lock que solo un refresh se ejecute a la vez (single-flight)
     private val refreshLock = Any()
 
     /**
@@ -38,7 +37,7 @@ object NetworkModule {
         }
 
         val client = OkHttpClient.Builder()
-            // Interceptor: agregamos el token a cada request
+            // Interceptor: agrego el token a cada request
             .addInterceptor { chain ->
                 val reqBuilder = chain.request().newBuilder()
                 authManager.getAccessToken()?.let { token ->
@@ -48,22 +47,18 @@ object NetworkModule {
                 Log.d("NetworkModule", "request: ${req.method} ${req.url}")
                 chain.proceed(req)
             }
-            // Authenticator: manejamos el refresh cuando recibimos 401
+            // Authenticator: manejo el refresh cuando recibo 401
             .authenticator { route: Route?, response: Response ->
-                // Extraemos el token que falló
-                // Extract the access token used in the failed request
+                // Extraigo el token que falló
                 val authHeader = response.request.header("Authorization")
                 val failedAccess = authHeader?.removePrefix("Bearer ")
 
-                // Si no hay refresh token, no podemos hacer nada
-                // Quick exit if no refresh token available
+                // No puedo hacer refresh si no hay refresh token disponible
                 val refreshToken = authManager.getRefreshToken() ?: return@authenticator null
 
-                // Single-flight: solo un thread hace refresh, los demás reusan el resultado
-                // Single-flight: only one thread will perform refresh; others will reuse result
+                // Garantizo single-flight: solo un hilo realiza el refresh; los demás reutilizan el resultado
                 synchronized(refreshLock) {
-                    // Si otro thread ya refrescó los tokens, usamos el nuevo
-                    // If another thread already refreshed tokens, use the latest access token
+                    // Si otro hilo ya refrescó los tokens, uso el token de acceso más reciente
                     val latestAccess = authManager.getAccessToken()
                     if (!latestAccess.isNullOrEmpty() && latestAccess != failedAccess) {
                         return@synchronized response.request.newBuilder()
@@ -71,8 +66,8 @@ object NetworkModule {
                             .build()
                     }
 
-                    // Creamos un cliente sincrónico para hacer el refresh
-                    // Build a synchronous API for refresh (Call<T>) to execute blocking inside authenticator
+                    // Construyo un cliente sincrónico para hacer el refresh
+                    // Construyo una API sincrónica para el refresh (Call<T>) y ejecuto de forma bloqueante dentro del authenticator
                     val moshi = Moshi.Builder()
                         .add(KotlinJsonAdapterFactory())
                         .build()
@@ -89,7 +84,7 @@ object NetworkModule {
                         if (refreshResp.isSuccessful) {
                             val body = refreshResp.body()
                             if (body?.accessToken != null && body.refreshToken != null) {
-                                // Guardamos los nuevos tokens (con rotación del refresh token)
+                                // Guardo los nuevos tokens (con rotación del refresh token)
                                 authManager.saveTokens(body.accessToken, body.refreshToken)
                                 response.request.newBuilder()
                                     .header("Authorization", "Bearer ${body.accessToken}")
@@ -99,11 +94,12 @@ object NetworkModule {
                                 null
                             }
                         } else {
-                            // Si falla el refresh, limpiamos tokens (sesión expirada)
+                            // Si falla el refresh, limpio tokens (sesión expirada)
                             authManager.clearTokens()
                             null
                         }
                     } catch (t: Throwable) {
+                        // Si ocurre un error durante el refresh, limpio tokens
                         authManager.clearTokens()
                         null
                     }

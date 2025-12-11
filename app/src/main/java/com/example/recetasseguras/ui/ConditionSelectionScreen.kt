@@ -48,48 +48,55 @@ fun ConditionSelectionScreen(
             singleLine = true,
         )
         Spacer(Modifier.height(8.dp))
-        if (search.isBlank()) {
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Escribe para buscar condiciones...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-            }
-        } else {
-            if (filtered.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No se encontraron condiciones.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
-                    )
+
+        // Ocupo este bloque para mantener
+        // la sección de seleccionados y el botón siempre abajo.
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            when {
+                search.isBlank() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Escribe para buscar condiciones...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
                 }
-            } else {
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(filtered) { cond ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = cond.name,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Button(
-                                onClick = { onAddCondition(cond) },
-                                enabled = !selectedConditions.contains(cond),
-                                modifier = Modifier.padding(start = 8.dp)
+                filtered.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No se encontraron condiciones.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(filtered) { cond ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Agregar")
+                                Text(
+                                    text = cond.name,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Button(
+                                    onClick = { onAddCondition(cond) },
+                                    enabled = !selectedConditions.contains(cond),
+                                    modifier = Modifier.padding(start = 8.dp)
+                                ) {
+                                    Text("Agregar")
+                                }
                             }
                         }
                     }
@@ -125,7 +132,8 @@ fun ConditionSelectionScreen(
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = onSave,
-            enabled = selectedConditions.isNotEmpty() && !loading,
+            // Permito guardar inclusive cuando no haya condiciones seleccionadas.
+            enabled = !loading,
             modifier = Modifier.fillMaxWidth()
         ) { Text("Guardar") }
         if (loading) {
@@ -136,4 +144,3 @@ fun ConditionSelectionScreen(
         }
     }
 }
-    

@@ -9,7 +9,7 @@ data class RegisterRequest(val username: String, val email: String, val password
 data class AuthRequest(val email: String, val password: String)
 
 @JsonClass(generateAdapter = true)
-data class ChangePasswordRequest(val oldPassword: String, val newPassword: String)
+data class ChangePasswordRequest(val oldPassword: String, val newPassword: String, val confirmPassword: String)
 
 @JsonClass(generateAdapter = true)
 data class RefreshRequest(val refreshToken: String)
@@ -24,7 +24,7 @@ data class AuthResponse(
 )
 
 @JsonClass(generateAdapter = true)
-data class UserDto(val id: Long?, val username: String?, val email: String?)
+data class UserDto(val id: Long?, val username: String?, val email: String?, val role: String? = null)
 
 @JsonClass(generateAdapter = true)
 data class ValidationError(val field: String?, val message: String?)
@@ -34,6 +34,7 @@ data class ApiError(
     val timestamp: String?,
     val status: Int?,
     val error: String?,
+    val code: String?,
     val message: String?,
     val errors: List<ValidationError>?
 )

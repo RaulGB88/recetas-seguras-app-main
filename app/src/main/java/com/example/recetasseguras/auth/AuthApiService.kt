@@ -39,4 +39,7 @@ interface AuthApiService {
 
     @POST("/api/auth/change-password")
     suspend fun changePassword(@Body req: ChangePasswordRequest): Response<Unit>
+    
+    @GET("/api/admin/stats")
+    suspend fun getStats(): retrofit2.Response<Map<String, Long>>
 }
