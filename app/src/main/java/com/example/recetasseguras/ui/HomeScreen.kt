@@ -45,13 +45,32 @@ fun HomeScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // Muestro loading si los datos aún no se han cargado (son null) o si loading es true
-        if (foods == null || recipes == null || loading) {
+        // Mostrar loading solo si loading es true
+        if (loading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(16.dp))
                     Text("Cargando sugerencias...", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        } else if (foods == null || recipes == null) {
+            // Si los datos aún no se han cargado (null) pero no estamos loading, mostramos un placeholder amigable
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "Aún no hay sugerencias para mostrar. Por favor, selecciona tus condiciones para recibir recomendaciones personalizadas.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
             }
         } else {
