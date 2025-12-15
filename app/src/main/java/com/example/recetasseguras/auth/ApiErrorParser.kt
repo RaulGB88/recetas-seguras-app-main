@@ -75,7 +75,7 @@ object ApiErrorParser {
             "USER_NOT_FOUND" -> "Usuario no encontrado. Verifica tu correo y vuelve a intentarlo."
             "USERNAME_ALREADY_EXISTS" -> "El nombre de usuario ya está en uso. Elige otro nombre."
             "INVALID_PASSWORD" -> "Contraseña incorrecta. Verifica e intenta de nuevo."
-            "PASSWORD_ERROR" -> "Error con la contraseña. Verifica que tenga al menos 8 caracteres, incluyendo letras y números."
+            "PASSWORD_ERROR" -> "Error con la contraseña. Verifica que tenga al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@#\$%^&+=!*()_-)."
             "EMAIL_ALREADY_EXISTS" -> "El correo ya está registrado. Usa otro correo o inicia sesión."
             "VALIDATION_FAILED" -> "Hay errores en los datos enviados. Revisa los campos marcados y corrígelos."
             "MALFORMED_JSON" -> "El formato JSON de la petición es inválido. Revisa la estructura enviada."
